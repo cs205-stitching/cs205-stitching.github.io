@@ -1,14 +1,15 @@
 body {
-    font-family: 'Montserrat'
+    font-family: 'Montserrat';
+    font-size: 90%;
 }
 
 
 header {
-    background-color: #1cca59
+    background-color: slategrey;
 }
 
 h1 {
-    color: #1cca59;
+    color: slategrey;
 }
 
 header h1 {
@@ -24,15 +25,15 @@ header h1 {
     text-align: center;
 }
 
-strong {
-    color: #1cca59;
-}
-
 a {
-    color: lightskyblue;
+    color: lightslategray;
 }
 
 #info {
     font-size: 14px;
-    color: #8ff0b1;
+    color: lightgrey;
+}
+
+h4 {
+    font-weight: 900;
 }
