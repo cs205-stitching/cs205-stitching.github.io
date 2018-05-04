@@ -127,7 +127,10 @@
             <br><br>
 
             <h4>Profiling</h4>
-
+            <p>We run the sequential code of stitching on two images of different resolutions and plot the execution time of each stage. We omitted transformation estimation, as OpenCV has a very efficient implementation of it, which takes negligible time compared to the other stages.</p>
+            <p class="img"><img src="img/profile.png"></p>
+            <p>With the larger image, keypoint detection, keypoint description and keypoint matching are the three most time-consuming steps. With the smaller image, the running time of matching decreases so much that it even takes shorter than warping. This is expected, as when the image is larger, there will be exponentially more interest points, which takes exponentially more time to match. Given that the maximum video resolution we are targeting is 1080p, which is smaller than the small image, we shouldn't be concerned too much about parallelizing it. As for stitching, it is clearly negligible compared to the other steps.</p>
+            <p>From this profiling, it tells us we should be more concerned about <strong>keypoint detection</strong>, <strong>keypoint description</strong> and <strong>warping</strong>. </p>
             <br><br>
 
             <h4>Parallelization Implementation</h4>
