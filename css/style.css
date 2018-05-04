@@ -27,6 +27,11 @@ header h1 {
 
 a {
     color: lightslategray;
+    text-decoration: underline;
+}
+
+.js-scroll-trigger {
+    text-decoration: none;
 }
 
 #info {

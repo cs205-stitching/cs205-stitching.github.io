@@ -130,7 +130,7 @@
 
             <br><br>
 
-            <h4>Software Design Overview</h4>
+            <h4>Parallelization Implementation</h4>
             <br>
             <h5>Parallelization Targets</h5>
             <p>Based on the profiling results shown above, we can see that <strong>keypoint detection</strong>, <strong>descriptor extraction</strong> and <strong>warping</strong> are the computationally heaviest and thus should be parallelized the most.</p>
@@ -144,26 +144,30 @@
             <h5>Programming Models</h5>
             <p>We will use several parallel computing paradigms and compare their performance:</p>
             <p>
-            <ul>
               <li><strong>Shared Memory Parallelization (OpenMP)</strong></li>
-              <p>For shared memory parallelization, we just need to add directives to loops that do not have sequential dependence.
+              <p>For shared memory parallelization, we just need to add directives to independent loops. Shared variables and private variables need to be differentiated.
               <li><strong>GPU Acceleration (OpenACC)</strong></li>
-              <p>GPU acceleration is very suitable for this type of task. The many cores in GPU provide fundamentally larger computing power. However, we need to pay special attention to the overhead of making memory copies in order to achieve high speedup.</p>
+              <p>GPU acceleration is very suitable for this type of task. The many cores in GPU provide fundamentally larger computing power. However, we need to pay special attention to the following aspects:</p>
+              <ul>
+                <li>Many loops are dealing with image or matrix variables that take up much memory. Redundant memory copies will create huge overhead that might just negate the speedup from parallelization. We need to limit memory copies as much as possible by copying in variables before parallel regions.</li>
+                <li>OpenACC currently does not support many special data structures, for example the mat object in OpenCV or IplImage. In order to parallelize regions where these data structures are used, we rewrote these parts with the most common data structures in c++.</li>
+                <li>For variables that have different values in each iteration, we need to define those as private variables to ensure code integrity.</li>
+              </ul>
               <li><strong>Advanced Feature: Task-Level Parallelization (Threading)</strong></li>
-              <p>The whole task of image stitching can be broken down to various stages. In addition to the algorithms mentioned previously, we still need to extract frames from webcam video stream, and output video from stitched images. By pipelining the different stages with the multiple CPU threads available, we can achieve task-level parallelization so that the execution time will be decided by the bottleneck of the pipeline.</p>
+              <p>The whole task of image stitching can be broken down to various stages. In addition to the algorithms mentioned previously, we still need to extract frames from webcam video stream, and output video from stitched images. </p>
+              <p>In the sequential version, after one task is finished, it needs to wait for all the downstream steps to be completed in order to be restarted. In this case, the critical path is all the stages of the entire workflow.</p>
+              <p class="img"><img src="img/sequential.png" height="350" width="250"></p>
+
+              <p>By pipelining the different stages with the multiple CPU threads available, we can achieve task-level parallelization so that idle time is reduced. Each thread notify their downstream when they finish their current iteration and jump right into the next. In this way, the total execution time will be constrained by the bottleneck of the four threads. We designed our pipeline to be the following diagram:</p>
+              <p class="img"><img src="img/pipeline.png" height="330" width="750"></p>
+              <p>The pipeline utilizes four threads that focus on different tasks. The main thread has to render images due to the constraint of OpenCV. The main thread will continuously render images from a mutex object that contains the stitched images, which ensure the data's integrity. The other threads communicate by notifying each other when one iteration is completed.</p>
+
               <li><strong>Hybrid Parallelization</strong></li>
-              <p>The previous three approaches can be integrated to a great extent. While the CPU threads are pipelined to handle differen tasks, each task can be parallelized at a procedure/loop level with either OpenACC or OpenMP. We just need to figure out the optimal combination of these approaches.</p>
-            </ul>
+              <p>To achieve maximum speedup, we can integrate task-level parallelization with procedure/loop level parallelization.</p>
+              <p>The way we designed our task-level pipeline allows for integration with GPU acceleration. OpenACC only allows to be called from only one thread. In our pipeline, the stitching thread is the only thread that needs to do heavy computation. Therefore, we can accelerate the stitching thread by letting it operate on GPU. The other threads such as image i/o are less compute-intensive, and thus will be just fine operating on CPU. </p>
             <br>
-            <h5>Parallelism Taxonomy</h5>
-            <ul>
-              <li><strong>Types of applications</strong>: big compute with high throughput data</li>
-              <li><strong>Levels of parallelism</strong>: task level, procedure level, loop level</li>
-              <li><strong>Types of paralellism</strong>: function, pipeline, data</li>
-              <li><strong>Parallel execution model</strong>: Multiple Program, Multiple Data (MPMD)</li>
-            </ul>
-            <br><br>
-            <h4>Parallization Details</h4>
+            <h5>Parallelism Taxonomy</h5><br>
+            <p class="img"><img src="img/taxonomy.png" height="180" width="650"></p>
 
           </div>
         </div>
@@ -176,7 +180,12 @@
           <div class="col-lg-8 mx-auto">
             <h1>Performance Results</h1><br>
             <h4>Evaluation Approach</h4>
-            <p>To evaluate the performance of our parallelized program, we will use videos captured at different resolutions. We will use the average execution time of each frame to calculate speedup, and use the FPS as a measure of throughput.</p>
+            <p>To evaluate the performance of our parallelized program, we will use videos captured at different resolutions. The higher the resolution, the more computationally heavy it is to stitch the videos. We will use the average execution time of each frame to calculate speedup, and use the FPS as a measure of throughput.</p>
+            <p>We will be testing the performance with two modes of stitching:</p>
+            <ul>
+              <li><strong>Dynamic mode</strong>. Keypoints and homography will be calculated at each frame. This mode is suitable for the scenario where the relative position of the two cameras constantly change. Under this mode, each frame will require all stages of the stitching process (keypoint detection, matching, homography, perspective warping, stitching and blending).</li>
+              <li><strong>Static mode</strong>. Keypoints and homography are computed only once every 10 epochs. This mode is more suitable for cameras that rarely move, such as traffic surveillance cameras. Under this mode, most frames will only require the later few stages of the stitching process (perspective warping, stitching and blending).</li>
+            </ul>
             <p>As for testing platform, we will use the <strong>AWS EC2 t2.2xlarge instance</strong> for baseline and shared memory parallel program. For GPU involved programs, we will evaluate the performance on two devices, a <strong>local PC</strong> with GPU and an <strong>AWS EC2 g3.4xlarge</strong> instance. The specifications of the local PC in comparison to the AWS instance are tabulated below:</p>
             <table class="table table-hover table-striped">
               <caption>Table 1. Device specifications for GPU programs</caption>
@@ -189,12 +198,17 @@
               </thead>
               <tbody>
               <tr>
-                <th scope="row">Operating System</th>
+                <th scope="row">Operating system</th>
                 <td>Ubuntu 16.04</td>
                 <td>Ubuntu 16.04</td>
               </tr>
               <tr>
-                <th scope="row">vCPU</th>
+                <th scope="row">CPU model</th>
+                <td>Intel(R) Xeon(R) CPU E3-1231 v3 @ 3.40GHz</td>
+                <td>Intel(R) Xeon(R) CPU E5-2676 v3 @ 2.40GHz</td>
+              </tr>
+              <tr>
+                <th scope="row">vCPU(s)</th>
                 <td>8</td>
                 <td>8</td>
               </tr>
@@ -223,11 +237,110 @@
             <p>All used codes and test cases are documented with detailed instructions, which can be found at our <a href="https://github.com/ziqiguo/CS205-ImageStitching">Github repository</a>.</p>
             <br><br>
             <h4>Serial Version</h4>
-            <h4>Shared Memory Parallelization with OpenMP</h4>
-            Time break-down, speedup, FPS, scalability, overhead
-            <h4>GPU Parallelization with OpenACC</h4>
-            <h4>Task-level Parallelization</h4>
+            <p>In this section, we see the performance results of the serial version as a baseline.</p>
+            <p>First let's see the execution time of each stage in the stitching process for videos of different resolutions. We only include stages that involve heavier computation.</p>
+            <table class="table table-hover table-striped">
+              <caption>Table 2. Execution time of serial version</caption>
+              <thead>
+              <tr>
+                <th scope="col">Stage</th>
+                <th scope="col">240p</th>
+                <th scope="col">480p</th>
+                <th scope="col">720p</th>
+                <th scope="col">1080p</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <th scope="row">Keypoint detection</th>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">Keypoint description</th>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">Keypoint matching</th>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">Homography</th>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">Warping</th>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">Stitching</th>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">Total</th>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+              </tr>
+              </tbody>
+            </table>
+            <p>Then let's see the how Frames Per Second varies for videos of different resolutions.</p>
+            <table class="table table-hover table-striped">
+              <caption>Table 2. Execution time of serial version</caption>
+              <thead>
+              <tr>
+                <th scope="col">Mode</th>
+                <th scope="col">240p</th>
+                <th scope="col">480p</th>
+                <th scope="col">720p</th>
+                <th scope="col">1080p</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <th scope="row">Dynamic Mode</th>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">Static Mode</th>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+              </tr>
+              </tbody>
+            </table>
+            <h4>OpenMP Version</h4>
+            <p>In this section, we show the performance results after implementing shared memory parallelization with OpenMP.</p>
+            <h4>OpenACC Version</h4>
+            <p>In this section, we show the performance results after implementing GPU acceleration with OpenACC.</p>
+            <h4>Pipeline Version</h4>
+            <p>In this section, we show the performance results after implementing task-level parallelization with our multi-threading pipeline.</p>
+            <h4>Hybrid Version</h4>
+            <p>In this section, we show the performance results after implementing the hybrid of task-level parallelization and GPU acceleration.</p>
             <h4>Comparison</h4>
+            <p>In this section, we compare the speedup of all parallel versions against the serial version.</p>
           </div>
         </div>
       </div>
@@ -238,10 +351,19 @@
         <div class="row">
           <div class="col-lg-8 mx-auto">
             <h1>Discussions</h1><br>
-            <h4>Goals Achieved</h4>
-            <h4>Application</h4>
-            <h4>Limitation and Future Work</h4>
-            <h4></h4>
+            <h4>Insights</h4>
+            <p>Through this project, we conquered quite a few obstacles and obtained some precious insights from the process:</p>
+            <ul>
+              <li>With sufficient optimization, GPU acceleration is very suitable for image stitching. Sub-procedures like keypoint detection, keypoint description and perspective warping all involve repetitive loop operations that benefit tremendously from GPU's computing prowess.</li>
+              <li>We managed to control overhead in GPU memory copies, by reimplementing the code such that one memory copy before the parallel region is sufficient.</li>
+              <li>Through the simple idea of using a moving average of homography, video stability is significantly improved without utilizing any complicated stabilization algorithms.</li>
+              <li>We managed to design a task-level pipeline that exploits the computing resources from both CPU and GPU. It also balances workload to a great extent. This paradigm is extensively useful, as just by initializing additional threads, it can handle additional operations that can improve the stitching results such as bundle adjustment, without incurring too much additional execution time.</li>
+              <li>The success of this application tells the possibility of making a lot of other computer vision tasks real-time. Sub-procedures such as keypoint detection, perspective warping can be transplanted in a lot of other important applications, such as video stabilization, object contouring and object straightening. </li>
+            </ul>
+            <br><br>
+            <h4>Future Work</h4>
+            <p>There are of course some areas for improvement that call for future endeavors. For example, although we do not favor the idea of distributed memory parallelization with MPI due to the amount of data that have to be communicated, it might still be worth a try.</p>
+            <p>In addition, a lateral comparison of the scalability of different keypoint detection algorithms (SIFT, SURF, corner detection) might be interesting. Possibly more advanced operations like bundle adjustment can be assigned to the rest of the CPU threads available.</p>
 
 
           </div>
