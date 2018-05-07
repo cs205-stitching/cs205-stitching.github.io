@@ -184,11 +184,6 @@
             <h1>Performance Results</h1><br>
             <h4>Evaluation Approach</h4>
             <p>To evaluate the performance of our parallelized program, we will use videos captured at different resolutions. The higher the resolution, the more computationally heavy it is to stitch the videos. We will use the average execution time of each frame to calculate speedup, and use the FPS as a measure of throughput.</p>
-            <p>We will be testing the performance with two modes of stitching:</p>
-            <ul>
-              <li><strong>Dynamic mode</strong>. Keypoints and homography will be calculated at each frame. This mode is suitable for the scenario where the relative position of the two cameras constantly change. Under this mode, each frame will require all stages of the stitching process (keypoint detection, matching, homography, perspective warping, stitching and blending).</li>
-              <li><strong>Static mode</strong>. Keypoints and homography are computed only once every 10 epochs. This mode is more suitable for cameras that rarely move, such as traffic surveillance cameras. Under this mode, most frames will only require the later few stages of the stitching process (perspective warping, stitching and blending).</li>
-            </ul>
             <p>As for testing platform, we will use the <strong>AWS EC2 t2.2xlarge instance</strong> for baseline and shared memory parallel program. For GPU involved programs, we will evaluate the performance on two devices, a <strong>local PC</strong> with GPU and an <strong>AWS EC2 g3.4xlarge</strong> instance. The specifications of the local PC in comparison to the AWS instance are tabulated below:</p>
             <table class="table table-hover table-striped">
               <caption>Table 1. Device specifications for GPU programs</caption>
@@ -246,8 +241,7 @@
               <caption>Table 2. Execution time of serial version</caption>
               <thead>
               <tr>
-                <th scope="col">Stage</th>
-                <th scope="col">240p</th>
+                <th scope="col">Resolution</th>
                 <th scope="col">480p</th>
                 <th scope="col">720p</th>
                 <th scope="col">1080p</th>
@@ -256,62 +250,55 @@
               <tbody>
               <tr>
                 <th scope="row">Keypoint detection</th>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
+                <td>0.162</td>
+                <td>0.420</td>
+                <td>0.954</td>
               </tr>
               <tr>
                 <th scope="row">Keypoint description</th>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
+                <td>0.067</td>
+                <td>0.141</td>
+                <td>0.226</td>
               </tr>
               <tr>
                 <th scope="row">Keypoint matching</th>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
+                <td>0.007</td>
+                <td>0.030</td>
+                <td>0.070</td>
               </tr>
               <tr>
                 <th scope="row">Homography</th>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
+                <td>0.005</td>
+                <td>0.007</td>
+                <td>0.046</td>
               </tr>
               <tr>
                 <th scope="row">Warping</th>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
+                <td>0.026</td>
+                <td>0.064</td>
+                <td>0.153</td>
               </tr>
               <tr>
                 <th scope="row">Stitching</th>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
+                <td>0.001</td>
+                <td>0.002</td>
+                <td>0.014</td>
               </tr>
               <tr>
                 <th scope="row">Total</th>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
+                <td>0.304</td>
+                <td>0.693</td>
+                <td>1.527</td>
               </tr>
               </tbody>
             </table>
+            <div id="seq-time"></div>
             <p>Then let's see the how Frames Per Second varies for videos of different resolutions.</p>
             <table class="table table-hover table-striped">
               <caption>Table 2. Execution time of serial version</caption>
               <thead>
               <tr>
-                <th scope="col">Mode</th>
-                <th scope="col">240p</th>
+                <th scope="col">Resolution</th>
                 <th scope="col">480p</th>
                 <th scope="col">720p</th>
                 <th scope="col">1080p</th>
@@ -319,18 +306,10 @@
               </thead>
               <tbody>
               <tr>
-                <th scope="row">Dynamic Mode</th>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-              </tr>
-              <tr>
-                <th scope="row">Static Mode</th>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
+                <th scope="row">FPS</th>
+                <td>3.3</td>
+                <td>1.4</td>
+                <td>0.7</td>
               </tr>
               </tbody>
             </table>
@@ -338,12 +317,148 @@
             <p>In this section, we show the performance results after implementing shared memory parallelization with OpenMP.</p>
             <h4>OpenACC Version</h4>
             <p>In this section, we show the performance results after implementing GPU acceleration with OpenACC.</p>
+            <table class="table table-hover table-striped">
+              <caption>Table 2. Execution time of serial version</caption>
+              <thead>
+              <tr>
+                <th scope="col">Platform</th>
+                <th scope="col" colspan="3">AWS g3.4xlarge</th>
+                <th scope="col" colspan="3">GTX 1070</th>
+              </tr>
+              <tr>
+                <th scope="col">Resolution</th>
+                <th scope="col">480p</th>
+                <th scope="col">720p</th>
+                <th scope="col">1080p</th>
+                <th scope="col">480p</th>
+                <th scope="col">720p</th>
+                <th scope="col">1080p</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <th scope="row">Keypoint detection</th>
+                <td>0.016</td>
+                <td>0.033</td>
+                <td>0.073</td>
+                <td>0.011</td>
+                <td>0.027</td>
+                <td>0.061</td>
+              </tr>
+              <tr>
+                <th scope="row">Keypoint description</th>
+                <td>0.020</td>
+                <td>0.024</td>
+                <td>0.030</td>
+                <td>0.010</td>
+                <td>0.014</td>
+                <td>0.018</td>
+              </tr>
+              <tr>
+                <th scope="row">Keypoint matching</th>
+                <td>0.003</td>
+                <td>0.004</td>
+                <td>0.009</td>
+                <td>0.0007</td>
+                <td>0.003</td>
+                <td>0.006</td>
+              </tr>
+              <tr>
+                <th scope="row">Homography</th>
+                <td>0.003</td>
+                <td>0.006</td>
+                <td>0.024</td>
+                <td>0.009</td>
+                <td>0.009</td>
+                <td>0.034</td>
+              </tr>
+              <tr>
+                <th scope="row">Warping</th>
+                <td>0.005</td>
+                <td>0.011</td>
+                <td>0.026</td>
+                <td>0.003</td>
+                <td>0.008</td>
+                <td>0.023</td>
+              </tr>
+              <tr>
+                <th scope="row">Stitching</th>
+                <td>0.002</td>
+                <td>0.0025</td>
+                <td>0.007</td>
+                <td>0.0007</td>
+                <td>0.001</td>
+                <td>0.013</td>
+              </tr>
+              <tr>
+                <th scope="row">Total</th>
+                <td>0.055</td>
+                <td>0.125</td>
+                <td>0.267</td>
+                <td>0.048</td>
+                <td>0.109</td>
+                <td>0.264</td>
+              </tr>
+              </tbody>
+            </table>
+
+            <div id="acc-tesla-speedup"></div>
+            <div id="acc-gtx-speedup"></div>
+
+            <table class="table table-hover table-striped">
+              <caption>Table 2. Execution time of serial version</caption>
+              <thead>
+              <tr>
+                <th scope="col">Platform</th>
+                <th scope="col" colspan="3">AWS g3.4xlarge</th>
+                <th scope="col" colspan="3">GTX 1070</th>
+              </tr>
+              <tr>
+                <th scope="col">Resolution</th>
+                <th scope="col">480p</th>
+                <th scope="col">720p</th>
+                <th scope="col">1080p</th>
+                <th scope="col">480p</th>
+                <th scope="col">720p</th>
+                <th scope="col">1080p</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <th scope="row">FPS</th>
+                <td>18</td>
+                <td>8</td>
+                <td>3.74</td>
+                <td>20</td>
+                <td>9</td>
+                <td>3.8</td>
+              </tr>
+              </tbody>
+            </table>
             <h4>Pipeline Version</h4>
-            <p>In this section, we show the performance results after implementing task-level parallelization with our multi-threading pipeline.</p>
-            <h4>Hybrid Version</h4>
-            <p>In this section, we show the performance results after implementing the hybrid of task-level parallelization and GPU acceleration.</p>
+            <p>In this section, we show the performance results after implementing task-level parallelization with our multi-threading pipeline, on top of GPU acceleration.</p>
+            <table class="table table-hover table-striped">
+              <caption>Table 2. Execution time of serial version</caption>
+              <thead>
+              <tr>
+                <th scope="col">Resolution</th>
+                <th scope="col">480p</th>
+                <th scope="col">720p</th>
+                <th scope="col">1080p</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <th scope="row">FPS</th>
+                <td>35</td>
+                <td>14</td>
+                <td>5</td>
+              </tr>
+              </tbody>
+            </table>
             <h4>Comparison</h4>
             <p>In this section, we compare the speedup of all parallel versions against the serial version.</p>
+            <div id="fps-comparison"></div>
           </div>
         </div>
       </div>
