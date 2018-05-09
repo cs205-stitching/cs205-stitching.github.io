@@ -626,12 +626,20 @@
         <div class="row">
           <div class="col-lg-8 mx-auto">
             <h1>Demonstrations</h1><br>
-            <p>In the previous sections, we have shown that with parallel computing techniques and mainly GPU acceleration, we are able to transform the serial version, which would take less than </p>
-            <p>Here we show the various demonstrations</p>
-            <iframe src="https://www.youtube.com/embed/AOEWrQpdmuw" frameborder="0" width="600" height="400" gesture="media" allow="encrypted-media" allowfullscreen></iframe>
-            <iframe src="https://www.youtube.com/embed/DG2lm59jOk8" frameborder="0" width="600" height="400" gesture="media" allow="encrypted-media" allowfullscreen></iframe>
-            <iframe src="https://www.youtube.com/embed/zT7efxlH7-g" frameborder="0" width="600" height="400" gesture="media" allow="encrypted-media" allowfullscreen></iframe>
-            <iframe src="https://www.youtube.com/embed/PLp8XQtipk0" frameborder="0" width="600" height="400" gesture="media" allow="encrypted-media" allowfullscreen></iframe>
+            <p>In the previous sections, we have shown that with parallel computing techniques and mainly GPU acceleration, we are able to achieve 9x speedup on 720P videos.</p>
+            <p>Below we show how does the stitching two videos from two webcams look like with different versions of the software. For all the videos below, the 2 frames on the top are the inputs from webcams, whereas the frame below is the stitched output.</p>
+            <li><strong>Serial version before parallelization:</strong></li><br>
+            <iframe src="https://www.youtube.com/embed/AOEWrQpdmuw" frameborder="0" width="600" height="400" gesture="media" allow="encrypted-media" allowfullscreen></iframe><br>
+            <p>Before parallelization, the stitched video looks very bad due to significant delays.</p>
+            <li><strong>OpenACC version:</strong></li><br>
+            <iframe src="https://www.youtube.com/embed/DG2lm59jOk8" frameborder="0" width="600" height="400" gesture="media" allow="encrypted-media" allowfullscreen></iframe><br>
+            <p>With OpenACC, the stitched video is very fluid. Almost no delays can be detected by human eyes.</p>
+            <li><strong>OpenACC version (with moving camera):</strong></li><br>
+            <iframe src="https://www.youtube.com/embed/zT7efxlH7-g" frameborder="0" width="600" height="400" gesture="media" allow="encrypted-media" allowfullscreen></iframe><br>
+            <p>With moving camera, the stitched video has some perturbations. This can be improved by either mechanicalizing the movement or setting the moving average coefficient higher, which is an option built in our software. </p>
+            <li><strong>OpenACC version (with blending):</strong></li><br>
+            <iframe src="https://www.youtube.com/embed/PLp8XQtipk0" frameborder="0" width="600" height="400" gesture="media" allow="encrypted-media" allowfullscreen></iframe><br>
+            <p>With blending, the color difference between cameras and the stitching seam can be blurred. The output video seems more homogeneous. The downside is the extra computation it incurs. With our pipeline structure, future work can parallelizing blending as well.</p>
 
           </div>
         </div>
