@@ -82,7 +82,7 @@
               <p>As a first step, keypoints on the two images you want to stitch together need to be identified. These keypoints usually correspond to the most distinguish features of an image, such as corners and edges of an object. There are several famous algorithms that dedicately achieve this task, including Harris Corner Detection, Scale Invariant Feature Transform (SIFT) and Speed-Up Robust Features (SURF). SIFT and SURF are the state-of-the-art due to their robustness.</p>
               <p>Not only do these algorithms identify the keypoints, they will also generate a descriptor vector for each of the keypoints. These descriptors will capture information about the keypoints' location, orientation and relation to their surroundings.</p>
               <li><strong>Keypoint Matching</strong></li><br>
-              <p>After keypoint detection, each image will have a set of keypoints together with their descriptor vectors. We will then need to establish matching relations between these descriptors. Most methods are based on Euclidean distance between descriptors. For each keypoint in image 1, if its best match is significantly better than the second best match, than we consider the best match valid.</p>
+              <p>After keypoint detection, each image will have a set of keypoints together with their descriptor vectors. We will then need to establish matching relations between these descriptors. Most methods are based on Euclidean distance between descriptors. For each keypoint in image 1, if its best match is significantly better than the second best match, then we consider the best match valid.</p>
               <li><strong>Transformation Estimation</strong></li>
               <p>Once we have establish matching keypoints between images, we want to estimate a transformation matrix H that will be used to warp the image. Normally, Random Sample Consensus (RANSAC) will be used to derive reliable transformation matrix after removing false matches. The algorithm basically iteratively try out different match combinations and only keep the one that is the best-fitting to the matches.</p>
               <li><strong>Warping</strong></li>
@@ -95,7 +95,10 @@
             <br><br>
             <h4>Need for High Performance Computing</h4>
             <p>The key idea of our project is to focus on the word ‘real-time’. Although there are existing algorithms for the application, doing it in ‘real-time’ can still be challenging.</p>
-            <p>Imagine the scenario where we need a real-time panorama streaming view, this would require the backend application to stitch the view of different cameras together frame by frame. For a laggy video of 5 frames per second, we will need processing time of at most 0.2 seconds for each pair of images. This would be very difficult to achieve with regular computational resources. With a faster stitching process of one pair of images, we can process more image pairs per second, which would result in a higher Frames Per Second (FPS). FPS is a direct measure of how fluid the video looks to human eyes.</p>
+            <p>Imagine the scenario where we need a real-time panorama streaming view, this would require the backend application to stitch the view of different cameras together frame by frame. For a laggy video of 5 frames per second, we will need processing time of at most 0.2 seconds for each pair of images. This would be very difficult to achieve with regular computational resources. With a faster stitching process of one pair of images, we can process more image pairs per second, which would result in a higher Frames Per Second (FPS). FPS is a direct measure of how fluid the video looks to human eyes.
+            </p>
+            <p>In addition, most of the existing real-time stitching solution assume all of the cameras stay still during the whole streaming process. In this way it only require one single iteration of detecting features, matching features and estimating transformation. However, this assumption posed too much limitation on the application of this problem. We, however, do not have such assumption in our project. Ideally, we want to be able to stitch the view of several handheld cameras. The price we need to pay, is that we will need to detect features, match features and estimate transformations at each frame of the video. This will require us to further accelerate the code while ensuring the quality of the overall stitching result.
+            </p>
             <p>In addition, with high performance computing, we can stitch images of higher resolution, at a visually fluid speed. This is the whole motivation of parallelizing the task of image stitching.</p>
 
 
@@ -107,6 +110,7 @@
               <li>The desirable speedup might be challenging to achieve. The sequential version will take only a few seconds to run once. This means overheads such as memory access, synchronization and communication are by no means negligible. Speeding it up to achieve multiple frames per second entails careful optimization of overheads.</li>
               <li>The program might be heavily memory bound, as a high resolution image will have millions of pixels, and we can potentially find a large amount of keypoints. Accessing and communicating the original images and these keypoints together with their descriptors will add to the execution time.</li>
               <li>Our parallelization target is not a single algorithm. It is a sequence of algorithms achieving different tasks. We need to consider the possibility of task-level scheduling and parallelization of these different tasks.</li>
+              <li>This problem is nauturally a realtime programming problem, which implies it might be easily affected by many subtle problems in design and scheduling of the whole process.</li>
             </ul>
             <p></p>
 
@@ -144,7 +148,7 @@
             <h5>Technologies</h5>
             <ul>
               <li><strong>Programming language</strong>: C++</li>
-              <li><strong>Tools: </strong>OpenACC, OpenMP, std::thread</li>
+              <li><strong>Tools: </strong>OpenACC, OpenMP, POSIX pthread</li>
             </ul>
             <br>
             <h5>Programming Models</h5>
@@ -156,21 +160,22 @@
               <p>GPU acceleration is very suitable for this type of task. The many cores in GPU provide fundamentally larger computing power. However, we need to pay special attention to the following aspects:</p>
               <ul>
                 <li>Many loops are dealing with image or matrix variables that take up much memory. Redundant memory copies will create huge overhead that might just negate the speedup from parallelization. We need to limit memory copies as much as possible by copying in variables before parallel regions.</li>
-                <li>OpenACC currently does not support many special data structures, for example the mat object in OpenCV or IplImage. In order to parallelize regions where these data structures are used, we rewrote these parts with the most common data structures in c++.</li>
-                <li>For variables that have different values in each iteration, we need to define those as private variables to ensure code integrity.</li>
+                <li>OpenACC(PGI compiler) currently does not support many special data structures on device(GPU), for example the mat object in OpenCV, IplImage, and supprisingly, std::vector. In order to parallelize regions where these data structures are used, we created many walk around by rewriting these parts with the most common data structures(supported by PGI compiler) in c++.</li>
+                <li>For variables that have different values in each iteration of the loop, we need to define those as private variables to ensure the correctness of code results.</li>
+                <li>Since we did most of our implementation and part of our testing on a Pascal based GPU(GTX 1070), while PGI compiler is solely desinged for Tesla based GPU, we need to pay special attention to compile the OpenACC code on Pascal GPUs.</li>
               </ul>
               <li><strong>Advanced Feature: Task-Level Parallelization (Threading)</strong></li>
               <p>The whole task of image stitching can be broken down to various stages. In addition to the algorithms mentioned previously, we still need to extract frames from webcam video stream, and output video from stitched images. </p>
               <p>In the sequential version, after one task is finished, it needs to wait for all the downstream steps to be completed in order to be restarted. In this case, the critical path is all the stages of the entire workflow.</p>
               <p class="img"><img src="img/sequential.png" height="350" width="250"></p>
 
-              <p>By pipelining the different stages with the multiple CPU threads available, we can achieve task-level parallelization so that idle time is reduced. Each thread notify their downstream when they finish their current iteration and jump right into the next. In this way, the total execution time will be constrained by the bottleneck of the four threads. We designed our pipeline to be the following diagram:</p>
+              <p>By pipelining the different stages with the multiple CPU threads available, we can achieve task-level parallelization so that idle time is reduced. Each adjacent task thread share a variable pointer between them and update the pointer once they finish their current iteration and jump right into the next. In this way, the total execution time will be constrained by the bottleneck of the four threads. We designed our pipeline to be the following diagram:</p>
               <p class="img"><img src="img/pipeline.png" height="330" width="750"></p>
-              <p>The pipeline utilizes four threads that focus on different tasks. The main thread has to render images due to the constraint of OpenCV. The main thread will continuously render images from a mutex object that contains the stitched images, which ensure the data's integrity. The other threads communicate by notifying each other when one iteration is completed.</p>
+              <p>The pipeline utilizes three threads that focus on different tasks. The main thread has to render images due to the constraint of OpenCV. The main thread will continuously render images inside a critical section secured by mutex lock that contains the stitched images, which prevent threads from potential race conditions. The capture threads shared pointers with stitching thread to pass the captured image in the cameras to the stitiching thread.</p>
 
               <li><strong>Hybrid Parallelization</strong></li>
               <p>To achieve maximum speedup, we can integrate task-level parallelization with procedure/loop level parallelization.</p>
-              <p>The way we designed our task-level pipeline allows for integration with GPU acceleration. OpenACC only allows to be called from only one thread. In our pipeline, the stitching thread is the only thread that needs to do heavy computation. Therefore, we can accelerate the stitching thread by letting it operate on GPU. The other threads such as image i/o are less compute-intensive, and thus will be just fine operating on CPU. </p>
+              <p>The way we designed our task-level pipeline allows for integration with GPU acceleration. In our pipeline, the stitching thread is the only thread that needs to do heavy computation. Therefore, we can accelerate the stitching thread by letting it operate on GPU. The other threads such as image i/o are less compute-intensive, and thus will be just fine operating on CPU. The only constraint here is that OpenACC only allows to be called from only one thread. It does not support the existence of CUDA stream. For one of the future work, we are aiming at implementing pure CUDA version of this code and therefore could further divide the computationally expensive stitiching thred into more concurrent threads running tasks of different stages in different CUDA streams. </p>
             <br>
             <h5>Parallelism Taxonomy</h5><br>
             <p class="img"><img src="img/taxonomy.png" height="180" width="650"></p>
