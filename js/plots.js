@@ -268,10 +268,17 @@ var trace4 = {
     name: 'OpenACC (GeForce GTX 1070)'
 };
 
+var trace5 = {
+    x: ['480P', '720P', '1080P'],
+    y: [35, 14, 5],
+    type: 'line',
+    name: 'OpenACC with pipeline'
+};
 
 
 
-var data = [trace1, trace2, trace3, trace4];
+
+var data = [trace1, trace2, trace3, trace4, trace5];
 
 var layout = {
     xaxis: {

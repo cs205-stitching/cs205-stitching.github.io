@@ -537,6 +537,8 @@
             <br><br>
             <h4>Pipeline Version</h4>
             <p>In this section, we show the performance results after implementing task-level parallelization with our multi-threading pipeline, on top of GPU acceleration.</p>
+            <p>With task-level parallelization, we will not be able to further speed up the execution time of individual task. In fact, we even observe some slight slowdown on individual tasks, potentially due to frequent context switches between threads.</p>
+            <p>However, what's important about task-level parallelization is that it isolates the image capturing and rendering from the entire pipeline so that they can be carried out independently. As a result, we see some improvement in the rendering speed of the stitched images, which can be seen from the table below:</p>
             <table class="table table-hover table-striped">
               <caption>Table 2. Execution time of serial version</caption>
               <thead>
@@ -556,9 +558,68 @@
               </tr>
               </tbody>
             </table>
-            <p></p>
+            <p>One option of our developed software is stitching the images without recomputing the keypoints and homography at every frame. In such cases, image rendering will become the bottleneck of the pipeline. With faster image rendering libraries, we could further improve the video FPS.</p>
+            <br><br>
             <h4>Comparison</h4>
-            <p>In this section, we compare the speedup of all parallel versions against the serial version.</p>
+            <p>In this section, we compare the performance results across all parallel versions. First, we tabulated the speedup of all stages for different parallel versions at a resolution of 720P:</p>
+            <table class="table table-hover table-striped">
+              <caption>Table 2. Execution time of serial version</caption>
+              <thead>
+              <tr>
+                <th scope="col">Parallel Version</th>
+                <th scope="col">OpenMP</th>
+                <th scope="col">OpenACC (Tesla M60)</th>
+                <th scope="col">OpenACC (GeForce GTX 1070)</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <th scope="row">Keypoint detection</th>
+                <td>4.4</td>
+                <td>17.1</td>
+                <td>20.9</td>
+              </tr>
+              <tr>
+                <th scope="row">Keypoint description</th>
+                <td>0.5</td>
+                <td>10.0</td>
+                <td>17.1</td>
+              </tr>
+              <tr>
+                <th scope="row">Keypoint matching</th>
+                <td>1.9</td>
+                <td>10.0</td>
+                <td>13.3</td>
+              </tr>
+              <tr>
+                <th scope="row">Homography</th>
+                <td>2.3</td>
+                <td>1.2</td>
+                <td>0.8</td>
+              </tr>
+              <tr>
+                <th scope="row">Warping</th>
+                <td>4.8</td>
+                <td>10.5</td>
+                <td>14.4</td>
+              </tr>
+              <tr>
+                <th scope="row">Stitching</th>
+                <td>1</td>
+                <td>1.6</td>
+                <td>4</td>
+              </tr>
+              <tr>
+                <th scope="row">Total</th>
+                <td>1.4</td>
+                <td>8</td>
+                <td>9</td>
+              </tr>
+              </tbody>
+            </table>
+
+            Then let's directly compare the resulting FPS of the stitched video stream. Compared with GPU acceleration, the effect of OpenMP is not so significant. GPU is able to fundamentally speed up the program to a real-time level. The highest FPS is resulted from pipelining on top of OpenACC.
+
             <div id="fps-comparison"></div>
           </div>
         </div>
@@ -570,11 +631,20 @@
         <div class="row">
           <div class="col-lg-8 mx-auto">
             <h1>Demonstrations</h1><br>
-
-            <iframe src="https://www.youtube.com/embed/AOEWrQpdmuw" frameborder="0" width="600" height="400" gesture="media" allow="encrypted-media" allowfullscreen></iframe>
-            <iframe src="https://www.youtube.com/embed/DG2lm59jOk8" frameborder="0" width="600" height="400" gesture="media" allow="encrypted-media" allowfullscreen></iframe>
-            <iframe src="https://www.youtube.com/embed/zT7efxlH7-g" frameborder="0" width="600" height="400" gesture="media" allow="encrypted-media" allowfullscreen></iframe>
-            <iframe src="https://www.youtube.com/embed/PLp8XQtipk0" frameborder="0" width="600" height="400" gesture="media" allow="encrypted-media" allowfullscreen></iframe>
+            <p>In the previous sections, we have shown that with parallel computing techniques and mainly GPU acceleration, we are able to achieve 9x speedup on 720P videos.</p>
+            <p>Below we show how does the stitching two videos from two webcams look like with different versions of the software. For all the videos below, the 2 frames on the top are the inputs from webcams, whereas the frame below is the stitched output.</p>
+            <li><strong>Serial version before parallelization:</strong></li><br>
+            <iframe src="https://www.youtube.com/embed/AOEWrQpdmuw" frameborder="0" width="600" height="400" gesture="media" allow="encrypted-media" allowfullscreen></iframe><br>
+            <p>Before parallelization, the stitched video looks very bad due to significant delays.</p>
+            <li><strong>OpenACC version:</strong></li><br>
+            <iframe src="https://www.youtube.com/embed/DG2lm59jOk8" frameborder="0" width="600" height="400" gesture="media" allow="encrypted-media" allowfullscreen></iframe><br>
+            <p>With OpenACC, the stitched video is very fluid. Almost no delays can be detected by human eyes.</p>
+            <li><strong>OpenACC version (with moving camera):</strong></li><br>
+            <iframe src="https://www.youtube.com/embed/zT7efxlH7-g" frameborder="0" width="600" height="400" gesture="media" allow="encrypted-media" allowfullscreen></iframe><br>
+            <p>With moving camera, the stitched video has some perturbations. This can be improved by either mechanicalizing the movement or setting the moving average coefficient higher, which is an option built in our software. </p>
+            <li><strong>OpenACC version (with blending):</strong></li><br>
+            <iframe src="https://www.youtube.com/embed/PLp8XQtipk0" frameborder="0" width="600" height="400" gesture="media" allow="encrypted-media" allowfullscreen></iframe><br>
+            <p>With blending, the color difference between cameras and the stitching seam can be blurred. The output video seems more homogeneous. The downside is the extra computation it incurs. With our pipeline structure, future work can parallelizing blending as well.</p>
 
           </div>
         </div>
