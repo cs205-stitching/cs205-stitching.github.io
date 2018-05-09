@@ -152,7 +152,8 @@
             </ul>
             <br>
             <h5>Programming Models</h5>
-            <p>We will use several parallel computing paradigms and compare their performance:</p>
+            <p>On a code level we will use OpenMP and OpenACC, and as an advanced feature we will employ multi-threading for pipeline. However, we will not delve too deep into distributed memory parallelization with MPI. With some experimentation, we found out that the cost of communicating high resolution videos and keypoint vectors is too high for achieving a real-time program.</p>
+            <p>Below we detailed our use of the parallel computing paradigms.</p>
             <p>
               <li><strong>Shared Memory Parallelization (OpenMP)</strong></li>
               <p>For shared memory parallelization, we just need to add directives to independent loops. Shared variables and private variables need to be differentiated. We also need to specify region that should be executed one thread at a time to be critical.
@@ -160,9 +161,9 @@
               <p>GPU acceleration is very suitable for this type of task. The many cores in GPU provide fundamentally larger computing power. However, we need to pay special attention to the following aspects:</p>
               <ul>
                 <li>Many loops are dealing with image or matrix variables that take up much memory. Redundant memory copies will create huge overhead that might just negate the speedup from parallelization. We need to limit memory copies as much as possible by copying in variables before parallel regions.</li>
-                <li>OpenACC(PGI compiler) currently does not support many special data structures on device(GPU), for example the mat object in OpenCV, IplImage, and supprisingly, std::vector. In order to parallelize regions where these data structures are used, we created many walk around by rewriting these parts with the most common data structures(supported by PGI compiler) in c++.</li>
+                <li>OpenACC (PGI compiler) currently does not support many special data structures on device (GPU), for example the mat object in OpenCV, IplImage, and supprisingly, std::vector. In order to parallelize regions where these data structures are used, we created many walk around by rewriting these parts with the most common data structures (supported by PGI compiler) in c++.</li>
                 <li>For variables that have different values in each iteration of the loop, we need to define those as private variables to ensure the correctness of code results.</li>
-                <li>Since we did most of our implementation and part of our testing on a Pascal based GPU(GTX 1070), while PGI compiler is solely desinged for Tesla based GPU, we need to pay special attention to compile the OpenACC code on Pascal GPUs.</li>
+                <li>Since we did most of our implementation and part of our testing on a Pascal based GPU (GTX 1070), while PGI compiler is solely desinged for Tesla based GPU, we need to pay special attention to compile the OpenACC code on Pascal GPUs.</li>
               </ul>
               <li><strong>Advanced Feature: Task-Level Parallelization (Threading)</strong></li>
               <p>The whole task of image stitching can be broken down to various stages. In addition to the algorithms mentioned previously, we still need to extract frames from webcam video stream, and output video from stitched images. </p>
@@ -617,7 +618,8 @@
               </tr>
               </tbody>
             </table>
-
+            <p>We can see that on time-consuming stages including keypoint detection, keypoint description and warping, OpenACC is able to achieve significant speedup from the serial version.</p>
+            <div id="speedup-comparison"></div><br><br>
             Then let's directly compare the resulting FPS of the stitched video stream. Compared with GPU acceleration, the effect of OpenMP is not so significant. GPU is able to fundamentally speed up the program to a real-time level. The highest FPS is resulted from pipelining on top of OpenACC.
 
             <div id="fps-comparison"></div>

@@ -290,3 +290,40 @@ var layout = {
 };
 
 Plotly.newPlot('fps-comparison', data, layout);
+
+
+
+
+var trace1 = {
+    x: ['Keypoint detection', 'Keypoint description', 'Keypoint matching', 'Homography', 'Warping', 'Stitching', 'Total'],
+    y: [4.4, 0.5, 1.9, 2.3, 4.8, 1, 1.4],
+    type: 'bar',
+    name: 'OpenMP'
+};
+
+var trace2 = {
+    x: ['Keypoint detection', 'Keypoint description', 'Keypoint matching', 'Homography', 'Warping', 'Stitching', 'Total'],
+    y: [17.1, 10.0, 10.0, 1.2, 10.5, 1.6, 8.0],
+    type: 'bar',
+    name: 'OpenACC (Tesla M60)'
+};
+
+var trace3 = {
+    x: ['Keypoint detection', 'Keypoint description', 'Keypoint matching', 'Homography', 'Warping', 'Stitching', 'Total'],
+    y: [20.9, 17.1, 13.3, 0.8, 14.4, 4.0, 9.0],
+    type: 'bar',
+    name: 'OpenACC (GeForce GTX 1070)'
+};
+
+
+
+var data = [trace1, trace2, trace3];
+
+var layout = {
+    barmode: 'group',
+    yaxis: {
+        title: 'Speedup against serial version'
+    }
+};
+
+Plotly.newPlot('speedup-comparison', data, layout);
