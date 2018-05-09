@@ -43,6 +43,9 @@
               <a class="nav-link js-scroll-trigger" href="#follower">Performance Results</a>
             </li>
             <li class="nav-item">
+              <a class="nav-link js-scroll-trigger" href="#demo">Demonstrations</a>
+            </li>
+            <li class="nav-item">
               <a class="nav-link js-scroll-trigger" href="#playlist">Discussions</a>
             </li>
           </ul>
@@ -66,7 +69,7 @@
             <h1>Introduction</h1><br>
             <h4>Problem Statement</h4>
             <br>
-            <p>In this project, we want to use big compute techniques to parallelize the algorithms of <strong>image stitching</strong>, so that we can stream videos from adjascent camera into a single panoramic view.</p>
+            <p>In this project, we want to use big compute techniques to parallelize the algorithms of <a href="https://en.wikipedia.org/wiki/Image_stitching">image stitching</a>, so that we can stream videos from adjascent camera into a single panoramic view.</p>
             <p>Image stitching or photo stitching is the process of combining multiple photographic images with overlapping fields of view to produce a segmented panorama or high-resolution image (example below).</p>
             <br><br>
             <p class="img"><img src="img/stitching_example.jpg" height="300" width="750"></p>
@@ -148,7 +151,7 @@
             <p>We will use several parallel computing paradigms and compare their performance:</p>
             <p>
               <li><strong>Shared Memory Parallelization (OpenMP)</strong></li>
-              <p>For shared memory parallelization, we just need to add directives to independent loops. Shared variables and private variables need to be differentiated.
+              <p>For shared memory parallelization, we just need to add directives to independent loops. Shared variables and private variables need to be differentiated. We also need to specify region that should be executed one thread at a time to be critical.
               <li><strong>GPU Acceleration (OpenACC)</strong></li>
               <p>GPU acceleration is very suitable for this type of task. The many cores in GPU provide fundamentally larger computing power. However, we need to pay special attention to the following aspects:</p>
               <ul>
@@ -250,49 +253,50 @@
               <tbody>
               <tr>
                 <th scope="row">Keypoint detection</th>
-                <td>0.162</td>
-                <td>0.420</td>
-                <td>0.954</td>
+                <td>0.255</td>
+                <td>0.565</td>
+                <td>1.299</td>
               </tr>
               <tr>
                 <th scope="row">Keypoint description</th>
-                <td>0.067</td>
-                <td>0.141</td>
-                <td>0.226</td>
+                <td>0.187</td>
+                <td>0.239</td>
+                <td>0.347</td>
               </tr>
               <tr>
                 <th scope="row">Keypoint matching</th>
-                <td>0.007</td>
-                <td>0.030</td>
-                <td>0.070</td>
+                <td>0.025</td>
+                <td>0.040</td>
+                <td>0.081</td>
               </tr>
               <tr>
                 <th scope="row">Homography</th>
                 <td>0.005</td>
                 <td>0.007</td>
-                <td>0.046</td>
+                <td>0.034</td>
               </tr>
               <tr>
                 <th scope="row">Warping</th>
-                <td>0.026</td>
-                <td>0.064</td>
-                <td>0.153</td>
+                <td>0.051</td>
+                <td>0.115</td>
+                <td>0.261</td>
               </tr>
               <tr>
                 <th scope="row">Stitching</th>
                 <td>0.001</td>
-                <td>0.002</td>
-                <td>0.014</td>
+                <td>0.004</td>
+                <td>0.007</td>
               </tr>
               <tr>
                 <th scope="row">Total</th>
-                <td>0.304</td>
-                <td>0.693</td>
-                <td>1.527</td>
+                <td>0.524</td>
+                <td>0.970</td>
+                <td>2.029</td>
               </tr>
               </tbody>
             </table>
             <div id="seq-time"></div>
+            <p>From this benchmarking of serial version, we can see that most stages in the stitching process grows linearly with the height of the video, which indicates the problem size. Among all the stages, keypoint detection, keypoint description and warping are the most computationally heavy stages that we should focus on parallelizing.</p>
             <p>Then let's see the how Frames Per Second varies for videos of different resolutions.</p>
             <table class="table table-hover table-striped">
               <caption>Table 2. Execution time of serial version</caption>
@@ -307,14 +311,98 @@
               <tbody>
               <tr>
                 <th scope="row">FPS</th>
-                <td>3.3</td>
+                <td>1.7</td>
+                <td>1</td>
+                <td>0.5</td>
+              </tr>
+              </tbody>
+            </table>
+            <p>We can see that, with the serial version, even with 480P videos, we can only achieve a FPS of 1.7. This is clearly not enough for a visually fluid video.</p>
+            <br><br>
+            <h4>OpenMP Version</h4>
+            <p>In this section, we show the performance results after implementing shared memory parallelization with OpenMP.</p>
+            <table class="table table-hover table-striped">
+              <caption>Table 2. Execution time of serial version</caption>
+              <thead>
+              <tr>
+                <th scope="col">Resolution</th>
+                <th scope="col">480p</th>
+                <th scope="col">720p</th>
+                <th scope="col">1080p</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <th scope="row">Keypoint detection</th>
+                <td>0.064</td>
+                <td>0.129</td>
+                <td>0.229</td>
+              </tr>
+              <tr>
+                <th scope="row">Keypoint description</th>
+                <td>0.272</td>
+                <td>0.502</td>
+                <td>0.928</td>
+              </tr>
+              <tr>
+                <th scope="row">Keypoint matching</th>
+                <td>0.017</td>
+                <td>0.021</td>
+                <td>0.031</td>
+              </tr>
+              <tr>
+                <th scope="row">Homography</th>
+                <td>0.001</td>
+                <td>0.003</td>
+                <td>0.008</td>
+              </tr>
+              <tr>
+                <th scope="row">Warping</th>
+                <td>0.010</td>
+                <td>0.024</td>
+                <td>0.057</td>
+              </tr>
+              <tr>
+                <th scope="row">Stitching</th>
+                <td>0.001</td>
+                <td>0.004</td>
+                <td>0.007</td>
+              </tr>
+              <tr>
+                <th scope="row">Total</th>
+                <td>0.365</td>
+                <td>0.683</td>
+                <td>1.260</td>
+              </tr>
+              </tbody>
+            </table>
+            <p>Below we plotted the speedup of each stage against the serial version:</p>
+            <div id="omp-speedup"></div>
+            <p>From the graph above, we can see that OpenMP achieves some speedup to some extent. However, for keypoint description, which is a rather costly stage, OpenMP did not do very well accelerating it. This might be due to the fact that keypoint description is memory bound, so assigning loops to different threads will not fundamentally speedup the program.</p>
+
+            <p>Then let's see the how Frames Per Second varies for videos of different resolutions.</p>
+            <table class="table table-hover table-striped">
+              <caption>Table 2. Execution time of serial version</caption>
+              <thead>
+              <tr>
+                <th scope="col">Resolution</th>
+                <th scope="col">480p</th>
+                <th scope="col">720p</th>
+                <th scope="col">1080p</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <th scope="row">FPS</th>
+                <td>2.5</td>
                 <td>1.4</td>
                 <td>0.7</td>
               </tr>
               </tbody>
             </table>
-            <h4>OpenMP Version</h4>
-            <p>In this section, we show the performance results after implementing shared memory parallelization with OpenMP.</p>
+            <p>Based on FPS, OpenMP results in a more fluid video. But this is still not enough for our goal of "real-time".</p>
+
+            <br><br>
             <h4>OpenACC Version</h4>
             <p>In this section, we show the performance results after implementing GPU acceleration with OpenACC.</p>
             <table class="table table-hover table-striped">
@@ -402,8 +490,13 @@
               </tbody>
             </table>
 
+            <p>Below we plot the speedup for the two types of GPU:</p>
             <div id="acc-tesla-speedup"></div>
             <div id="acc-gtx-speedup"></div>
+            <p>For both GPUs, we achieve significant speedup on keypoint detection, description, matching as well as warping. We did not focus too much on homography and stitching because their OpenCV implementations are already very efficient.</p>
+            <p>If we look at different video resolutions, we can also see that the speedup is pretty homogeneous. This demonstrates that we controlled overhead like memory copies pretty well so that it does not shrink the speedup.</p>
+            <p>Finally, if we compare the results of the two GPUs, with GTX 1070, which has more computing power, a higher speedup can be achieved. This shows the scalability of the program - with GPU that has higher clock rate and more Gflops, we can always scale up to accommodate videos of higher quality and potentially incorporate more complicated video processing techniques.</p>
+            <p></p>
 
             <table class="table table-hover table-striped">
               <caption>Table 2. Execution time of serial version</caption>
@@ -430,11 +523,13 @@
                 <td>8</td>
                 <td>3.74</td>
                 <td>20</td>
-                <td>9</td>
+                <td>10</td>
                 <td>3.8</td>
               </tr>
               </tbody>
             </table>
+            <p>Based on the FPS table, we can see that with GTX 1070, we can stream stitched images at a rate of 20 frames per second for 480P, and 10 frames per second for 720P. Videos of this FPS is very fluid and will not show apparent delays to human eyes. For video of 1080P, the FPS is not as good, but we have shown that the program is highly scalable with the GPU's computing power.</p>
+            <br><br>
             <h4>Pipeline Version</h4>
             <p>In this section, we show the performance results after implementing task-level parallelization with our multi-threading pipeline, on top of GPU acceleration.</p>
             <table class="table table-hover table-striped">
@@ -456,6 +551,7 @@
               </tr>
               </tbody>
             </table>
+            <p></p>
             <h4>Comparison</h4>
             <p>In this section, we compare the speedup of all parallel versions against the serial version.</p>
             <div id="fps-comparison"></div>
@@ -464,7 +560,23 @@
       </div>
     </section>
 
-    <section id="playlist" class="bg-light">
+    <section id="demo" class="bg-light">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 mx-auto">
+            <h1>Demonstrations</h1><br>
+
+            <iframe src="https://www.youtube.com/embed/AOEWrQpdmuw" frameborder="0" width="600" height="400" gesture="media" allow="encrypted-media" allowfullscreen></iframe>
+            <iframe src="https://www.youtube.com/embed/DG2lm59jOk8" frameborder="0" width="600" height="400" gesture="media" allow="encrypted-media" allowfullscreen></iframe>
+            <iframe src="https://www.youtube.com/embed/zT7efxlH7-g" frameborder="0" width="600" height="400" gesture="media" allow="encrypted-media" allowfullscreen></iframe>
+            <iframe src="https://www.youtube.com/embed/PLp8XQtipk0" frameborder="0" width="600" height="400" gesture="media" allow="encrypted-media" allowfullscreen></iframe>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="playlist">
       <div class="container">
         <div class="row">
           <div class="col-lg-8 mx-auto">
