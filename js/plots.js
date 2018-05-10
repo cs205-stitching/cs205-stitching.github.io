@@ -55,7 +55,8 @@ var layout = {
     },
     yaxis: {
         title: 'Average time per frame'
-    }
+    },
+    title: 'Execution Time of Different Stages in Serial Version'
 };
 
 Plotly.newPlot('seq-time', data, layout);
@@ -111,8 +112,9 @@ var layout = {
         title: 'Video resolution'
     },
     yaxis: {
-        title: 'Average time per frame'
-    }
+        title: 'Speedup against serial version'
+    },
+    title: 'Speedup of Different Stages of OpenMP Version'
 };
 
 Plotly.newPlot('omp-speedup', data, layout);
@@ -172,7 +174,8 @@ var layout = {
     },
     yaxis: {
         title: 'Speedup against serial version'
-    }
+    },
+    title: 'Speedup of Different Stages of OpenACC Version (Tesla M60)'
 };
 
 Plotly.newPlot('acc-tesla-speedup', data, layout);
@@ -231,7 +234,8 @@ var layout = {
     },
     yaxis: {
         title: 'Speedup against serial version'
-    }
+    },
+    title: 'Speedup of Different Stages of OpenACC Version (GTX 1080)'
 };
 
 Plotly.newPlot('acc-gtx-speedup', data, layout);
@@ -286,7 +290,8 @@ var layout = {
     },
     yaxis: {
         title: 'Frames per second (FPS)'
-    }
+    },
+    title: "FPS Comparison of Different Parallel Versions"
 };
 
 Plotly.newPlot('fps-comparison', data, layout);
@@ -323,7 +328,8 @@ var layout = {
     barmode: 'group',
     yaxis: {
         title: 'Speedup against serial version'
-    }
+    },
+    title: "Speedup Comparison of Different Parallel Versions"
 };
 
 Plotly.newPlot('speedup-comparison', data, layout);

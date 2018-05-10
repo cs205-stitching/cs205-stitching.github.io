@@ -42,3 +42,8 @@ a {
 h4 {
     font-weight: 900;
 }
+
+figcaption {
+    display: inline-block;
+    text-align: center;
+}

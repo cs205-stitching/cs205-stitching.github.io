@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f21a7c97-696c-4c5f-a43e-1e31cd7f6de5" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/css/style.css" afterPath="$PROJECT_DIR$/css/style.css" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/index.html" afterPath="$PROJECT_DIR$/index.html" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/js/plots.js" afterPath="$PROJECT_DIR$/js/plots.js" />
     </list>
@@ -20,23 +21,33 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="index.html" pinned="false" current-in-tab="true">
+      <file leaf-file-name="index.html" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/index.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="424">
-              <caret line="611" column="19" lean-forward="true" selection-start-line="611" selection-start-column="19" selection-end-line="611" selection-end-column="19" />
+            <state relative-caret-position="-1237">
+              <caret line="574" column="81" lean-forward="false" selection-start-line="574" selection-start-column="81" selection-end-line="574" selection-end-column="81" />
               <folding>
-                <marker date="1525897541572" expanded="false" signature="42356:42362" ph="©" />
+                <marker date="1525919103112" expanded="false" signature="43796:43802" ph="©" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="plots.js" pinned="false" current-in-tab="false">
+      <file leaf-file-name="style.css" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/css/style.css">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="686">
+              <caret line="48" column="0" lean-forward="false" selection-start-line="48" selection-start-column="0" selection-end-line="48" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="plots.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/js/plots.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="581">
-              <caret line="324" column="46" lean-forward="false" selection-start-line="324" selection-start-column="46" selection-end-line="324" selection-end-column="46" />
+            <state relative-caret-position="-3523">
+              <caret line="114" column="46" lean-forward="false" selection-start-line="114" selection-start-column="46" selection-end-line="114" selection-end-column="46" />
               <folding />
             </state>
           </provider>
@@ -48,7 +59,6 @@
     <findStrings>
       <find>spotify-logo</find>
       <find>paralliza</find>
-      <find>img</find>
       <find>1080p</find>
       <find>we will be test</find>
       <find>plotly</find>
@@ -62,6 +72,10 @@
       <find>pgi compiler</find>
       <find>hybrid</find>
       <find>barmode</find>
+      <find>img</find>
+      <find>caption</find>
+      <find>figcaption</find>
+      <find>ta</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -71,8 +85,8 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/css/style.css" />
-        <option value="$PROJECT_DIR$/js/plots.js" />
         <option value="$PROJECT_DIR$/index.html" />
+        <option value="$PROJECT_DIR$/js/plots.js" />
       </list>
     </option>
   </component>
@@ -163,12 +177,12 @@
       <updated>1525376903552</updated>
       <workItem from="1525376904763" duration="26864000" />
       <workItem from="1525718450651" duration="16900000" />
-      <workItem from="1525839711009" duration="2265000" />
+      <workItem from="1525839711009" duration="5233000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="46029000" />
+    <option name="totallyTimeSpent" value="48997000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1440" height="900" extended-state="0" />
@@ -209,7 +223,7 @@
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <marker date="1525897541572" expanded="false" signature="42356:42362" ph="©" />
+            <marker date="1525919103112" expanded="false" signature="43796:43802" ph="©" />
           </folding>
         </state>
       </provider>
@@ -222,29 +236,29 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/index.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1237">
+          <caret line="574" column="81" lean-forward="false" selection-start-line="574" selection-start-column="81" selection-end-line="574" selection-end-column="81" />
+          <folding>
+            <marker date="1525919103112" expanded="false" signature="43796:43802" ph="©" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/css/style.css">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="477">
-          <caret line="32" column="18" lean-forward="false" selection-start-line="32" selection-start-column="18" selection-end-line="32" selection-end-column="18" />
+        <state relative-caret-position="686">
+          <caret line="48" column="0" lean-forward="false" selection-start-line="48" selection-start-column="0" selection-end-line="48" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/js/plots.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="581">
-          <caret line="324" column="46" lean-forward="false" selection-start-line="324" selection-start-column="46" selection-end-line="324" selection-end-column="46" />
+        <state relative-caret-position="-3523">
+          <caret line="114" column="46" lean-forward="false" selection-start-line="114" selection-start-column="46" selection-end-line="114" selection-end-column="46" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/index.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="424">
-          <caret line="611" column="19" lean-forward="true" selection-start-line="611" selection-start-column="19" selection-end-line="611" selection-end-column="19" />
-          <folding>
-            <marker date="1525897541572" expanded="false" signature="42356:42362" ph="©" />
-          </folding>
         </state>
       </provider>
     </entry>

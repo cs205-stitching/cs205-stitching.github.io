@@ -72,7 +72,9 @@
             <p>In this project, we want to use big compute techniques to parallelize the algorithms of <a href="https://en.wikipedia.org/wiki/Image_stitching">image stitching</a>, so that we can stream videos from adjascent camera into a single panoramic view.</p>
             <p>Image stitching or photo stitching is the process of combining multiple photographic images with overlapping fields of view to produce a segmented panorama or high-resolution image (example below).</p>
             <br><br>
-            <p class="img"><img src="img/stitching_example.jpg" height="300" width="750"></p>
+            <p class="img">
+                <img src="img/stitching_example.jpg" height="300" width="750">
+            </p>
             <br><br>
             <h4>Procedures of Image Stitching</h4>
             <br>
@@ -134,8 +136,10 @@
             <br><br>
 
             <h4>Profiling</h4>
-            <p>We run the sequential code of stitching on two images of different resolutions and plot the execution time of each stage. We omitted transformation estimation, as OpenCV has a very efficient implementation of it, which takes negligible time compared to the other stages.</p>
-            <p class="img"><img src="img/profile.png"></p>
+            <p>We run the sequential code of stitching on two images of different resolutions and plot the execution time of each stage. We omitted transformation estimation, as OpenCV has a very efficient implementation of it, which takes negligible time compared to the other stages.</p><br>
+            <p class="img">
+                <img src="img/profile.png">
+            </p><br>
             <p>With the larger image, keypoint detection, keypoint description and keypoint matching are the three most time-consuming steps. With the smaller image, the running time of matching decreases so much that it even takes shorter than warping. This is expected, as when the image is larger, there will be exponentially more interest points, which takes exponentially more time to match. Given that the maximum video resolution we are targeting is 1080p, which is smaller than the small image, we shouldn't be concerned too much about parallelizing it. As for stitching, it is clearly negligible compared to the other steps.</p>
             <p>From this profiling, it tells us we should be more concerned about <strong>keypoint detection</strong>, <strong>keypoint description</strong> and <strong>warping</strong>. </p>
             <br><br>
@@ -168,10 +172,14 @@
               <li><strong>Advanced Feature: Task-Level Parallelization (Threading)</strong></li>
               <p>The whole task of image stitching can be broken down to various stages. In addition to the algorithms mentioned previously, we still need to extract frames from webcam video stream, and output video from stitched images. </p>
               <p>In the sequential version, after one task is finished, it needs to wait for all the downstream steps to be completed in order to be restarted. In this case, the critical path is all the stages of the entire workflow.</p>
-              <p class="img"><img src="img/sequential.png" height="350" width="250"></p>
+              <p class="img">
+                <img src="img/sequential.png" height="350" width="250">
+              </p>
 
               <p>By pipelining the different stages with the multiple CPU threads available, we can achieve task-level parallelization so that idle time is reduced. Each adjacent task thread share a variable pointer between them and update the pointer once they finish their current iteration and jump right into the next. In this way, the total execution time will be constrained by the bottleneck of the four threads. We designed our pipeline to be the following diagram:</p>
-              <p class="img"><img src="img/pipeline.png" height="330" width="750"></p>
+              <p class="img">
+                <img src="img/pipeline.png" height="330" width="750">
+              </p>
               <p>The pipeline utilizes three threads that focus on different tasks. The main thread has to render images due to the constraint of OpenCV. The main thread will continuously render images inside a critical section secured by mutex lock that contains the stitched images, which prevent threads from potential race conditions. The capture threads shared pointers with stitching thread to pass the captured image in the cameras to the stitiching thread.</p>
 
               <li><strong>Hybrid Parallelization</strong></li>
@@ -305,7 +313,7 @@
             <p>From this benchmarking of serial version, we can see that most stages in the stitching process grows linearly with the height of the video, which indicates the problem size. Among all the stages, keypoint detection, keypoint description and warping are the most computationally heavy stages that we should focus on parallelizing.</p>
             <p>Then let's see the how Frames Per Second varies for videos of different resolutions.</p>
             <table class="table table-hover table-striped">
-              <caption>Table 2. Execution time of serial version</caption>
+              <caption>Table 3. FPS of serial version</caption>
               <thead>
               <tr>
                 <th scope="col">Resolution</th>
@@ -328,7 +336,7 @@
             <h4>OpenMP Version</h4>
             <p>In this section, we show the performance results after implementing shared memory parallelization with OpenMP.</p>
             <table class="table table-hover table-striped">
-              <caption>Table 2. Execution time of serial version</caption>
+              <caption>Table 4. Execution time of OpenMP version</caption>
               <thead>
               <tr>
                 <th scope="col">Resolution</th>
@@ -388,7 +396,7 @@
 
             <p>Then let's see the how Frames Per Second varies for videos of different resolutions.</p>
             <table class="table table-hover table-striped">
-              <caption>Table 2. Execution time of serial version</caption>
+              <caption>Table 5. FPS of OpenMP version</caption>
               <thead>
               <tr>
                 <th scope="col">Resolution</th>
@@ -412,7 +420,7 @@
             <h4>OpenACC Version</h4>
             <p>In this section, we show the performance results after implementing GPU acceleration with OpenACC.</p>
             <table class="table table-hover table-striped">
-              <caption>Table 2. Execution time of serial version</caption>
+              <caption>Table 6. Execution time of OpenACC version</caption>
               <thead>
               <tr>
                 <th scope="col">Platform</th>
@@ -505,7 +513,7 @@
             <p></p>
 
             <table class="table table-hover table-striped">
-              <caption>Table 2. Execution time of serial version</caption>
+              <caption>Table 7. FPS of OpenACC version</caption>
               <thead>
               <tr>
                 <th scope="col">Platform</th>
@@ -541,7 +549,7 @@
             <p>With task-level parallelization, we will not be able to further speed up the execution time of individual task. In fact, we even observe some slight slowdown on individual tasks, potentially due to frequent context switches between threads.</p>
             <p>However, what's important about task-level parallelization is that it isolates the image capturing and rendering from the entire pipeline so that they can be carried out independently. As a result, we see some improvement in the rendering speed of the stitched images, which can be seen from the table below:</p>
             <table class="table table-hover table-striped">
-              <caption>Table 2. Execution time of serial version</caption>
+              <caption>Table 8. FPS of pipeline version</caption>
               <thead>
               <tr>
                 <th scope="col">Resolution</th>
@@ -564,7 +572,7 @@
             <h4>Comparison</h4>
             <p>In this section, we compare the performance results across all parallel versions. First, we tabulated the speedup of all stages for different parallel versions at a resolution of 720P:</p>
             <table class="table table-hover table-striped">
-              <caption>Table 2. Execution time of serial version</caption>
+              <caption>Table 9. Speedup comparison of different parallel versions</caption>
               <thead>
               <tr>
                 <th scope="col">Parallel Version</th>
@@ -671,8 +679,21 @@
             <h4>Future Work</h4>
             <p>There are of course some areas for improvement that call for future endeavors. For example, although we do not favor the idea of distributed memory parallelization with MPI due to the amount of data that have to be communicated, it might still be worth a try.</p>
             <p>In addition, a lateral comparison of the scalability of different keypoint detection algorithms (SIFT, SURF, corner detection) might be interesting. Possibly more advanced operations like bundle adjustment can be assigned to the rest of the CPU threads available.</p>
-
-
+            <br><br>
+            <h4>References</h4>
+            <ul>
+              <li>SURF code source: <a href="https://github.com/julapy/ofxOpenSurf">https://github.com/julapy/ofxOpenSurf</a></li>
+              <li>Data source: videos taken from <a href="https://www.amazon.com/Logitech-Laptop-Webcam-Design-360-Degree/dp/B004YW7WCY/ref=sr_1_8?s=pc&ie=UTF8&qid=1525394553&sr=1-8&keywords=logitech+webcam">Logitech webcams</a></li>
+              <li>Knowledge references:
+                <ul>
+                  <li>Image stitching overview: <a href="http://ppwwyyxx.com/2016/How-to-Write-a-Panorama-Stitcher/">http://ppwwyyxx.com/2016/How-to-Write-a-Panorama-Stitcher/</a></li>
+                  <li>Keypoint detection: <a href="http://www.vision.ee.ethz.ch/~surf/eccv06.pdf">Speed-Up Robust Features (SURF)</a></li>
+                  <li>Transformation estimation: <a href="http://www.cse.yorku.ca/~kosta/CompVis_Notes/ransac.pdf">Random Sample Consensus (RANSAC)</a></li>
+                  <li>Perspective warping: <a href="https://github.com/stheakanath/panorama">https://github.com/stheakanath/panorama</a></li>
+                  <li>Blending: <a href="http://persci.mit.edu/pub_pdfs/spline83.pdf">A Multiresolution Spline With Application to Image Mosaics</a></li>
+                </ul>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
